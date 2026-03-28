@@ -18,7 +18,6 @@
 #define CALC_NUMBER_BUTTON_W ((WINW - (PADDING + CALC_BUTTON_PADDING) * 2.0f) / 5.0f) 
 
 typedef struct Button {
-    Vector2 size;
     const char *text;
     const char *shift_text;
     const char *alpha_text;
@@ -37,32 +36,32 @@ static const Vector2 number_button_size = (Vector2){
 static const Button function_buttons[5][6];
 static const Button number_buttons[4][5] = {
     {
-        (Button){ number_button_size, "7", "CONST", "" },
-        (Button){ number_button_size, "8", "CONV", "" },
-        (Button){ number_button_size, "9", "", "" },
-        (Button){ number_button_size, "DEL", "INS", "UNDO" },
-        (Button){ number_button_size, "AC", "OFF", "" },
+        (Button){ "7", "CONST", "" },
+        (Button){ "8", "CONV", "" },
+        (Button){ "9", "", "" },
+        (Button){ "DEL", "INS", "UNDO" },
+        (Button){ "AC", "OFF", "" },
     },
     {
-        (Button){ number_button_size, "4", "", "" },
-        (Button){ number_button_size, "5", "", "" },
-        (Button){ number_button_size, "6", "", "" },
-        (Button){ number_button_size, "×", "nPr", "GCD" },
-        (Button){ number_button_size, "÷", "nCr", "LCM" },
+        (Button){ "4", "", "" },
+        (Button){ "5", "", "" },
+        (Button){ "6", "", "" },
+        (Button){ "×", "nPr", "GCD" },
+        (Button){ "÷", "nCr", "LCM" },
     },
     {
-        (Button){ number_button_size, "1", "", "" },
-        (Button){ number_button_size, "2", "", "" },
-        (Button){ number_button_size, "3", "", "" },
-        (Button){ number_button_size, "+", "Pol", "lnt" },
-        (Button){ number_button_size, "-", "Pol", "lntg" },
+        (Button){ "1", "", "" },
+        (Button){ "2", "", "" },
+        (Button){ "3", "", "" },
+        (Button){ "+", "Pol", "lnt" },
+        (Button){ "-", "Pol", "lntg" },
     },
     {
-        (Button){ number_button_size, "0", "Rnd", "" },
-        (Button){ number_button_size, ".", "Ran#", "RanInt" },
-        (Button){ number_button_size, "⏨", "ℼ", "ℯ" },        // Exponent, Pi and Euler
-        (Button){ number_button_size, "Ans", "%", "PreAns" },
-        (Button){ number_button_size, "=", "≈", "" },         // Equal and approximation
+        (Button){ "0", "Rnd", "" },
+        (Button){ ".", "Ran#", "RanInt" },
+        (Button){ "⏨", "ℼ", "ℯ" },        // Exponent, Pi and Euler
+        (Button){ "Ans", "%", "PreAns" },
+        (Button){ "=", "≈", "" },         // Equal and approximation
     },
 };
 
