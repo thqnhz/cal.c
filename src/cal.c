@@ -10,6 +10,8 @@
 #define CALC_HEADER 40.0f
 #define CALC_DISPLAY_H 72.0f
 
+static Font font;
+
 static const Color CALC_THEME_BASE = (Color){ 30, 30, 46, 255 };
 static const Color CALC_THEME_MANTLE = (Color){ 24, 24, 37, 255 };
 static const Color CALC_THEME_CRUST = (Color){ 17, 17, 27, 255 };
@@ -25,14 +27,14 @@ static const Rectangle CALC_DISPLAY = (Rectangle){ .x      = PADDING,
                                                    .height = CALC_DISPLAY_H };
 
 static inline void draw_background();
-static inline void draw_header(Font font);
+static inline void draw_header();
 static inline void draw_display();
-static inline void draw_display_text_result(Font font, const char *text, float font_size);
+static inline void draw_display_text_result(const char *text, float font_size);
 
-static inline void draw_app(Font font) {
+static inline void draw_app() {
     ClearBackground(CALC_THEME_BASE);
     draw_background();
-    draw_header(font);
+    draw_header();
     draw_display();
 }
 
@@ -40,16 +42,17 @@ static inline void draw_background() {
     DrawRectangleRounded(CALC_BG, .05f, 0, CALC_THEME_MANTLE);
 }
 
-static inline void draw_header(Font font) {
+static inline void draw_header() {
     Vector2 text_size = MeasureTextEx(font, APP_NAME_FULL, 32.0f, .0f);
     Vector2 draw_pos = { (WINW - text_size.x) / 2.0f, PADDING + (CALC_HEADER - text_size.y) / 2.0f };
-    DrawTextEx(font, APP_NAME_FULL, draw_pos, 32.0f, .0f, CALC_THEME_TEXT); }
+    DrawTextEx(font, APP_NAME_FULL, draw_pos, 32.0f, .0f, CALC_THEME_TEXT);
+}
 
 static inline void draw_display() {
     DrawRectangleRounded(CALC_DISPLAY, 0.05f, 0, CALC_THEME_CRUST);
 }
 
-static inline void draw_display_text_result(Font font, const char *text, float font_size) {
+static inline void draw_display_text_result(const char *text, float font_size) {
     Vector2 text_size = MeasureTextEx(font, text, font_size, 0.0f);
 }
 
@@ -58,15 +61,16 @@ int main() {
 
     if (!SearchAndSetResourceDir("assets"))
         TraceLog(LOG_WARNING, "Failed to set resource directory, fonts won't load correctly");
-    Font font = LoadFontEx(TextFormat("%s/%s", GetWorkingDirectory(), "Rubik/Rubik-Regular.ttf"), 72, 0, 0);
+    font = LoadFontEx(TextFormat("%s/%s", GetWorkingDirectory(), "Rubik/Rubik-Regular.ttf"), 72, 0, 0);
 
     while (!WindowShouldClose()) {
         BeginDrawing();
-        draw_app(font);
+        draw_app();
         DrawTextEx(font, "0", (Vector2){ PADDING + 4.0f, PADDING + CALC_HEADER }, 36.0f, .0f, CALC_THEME_TEXT);
         EndDrawing();
     }
 
+    UnloadFont(font);
     CloseWindow();
     return 0;
 }
