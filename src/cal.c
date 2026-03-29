@@ -11,6 +11,7 @@
 #define PADDING (WIN_PADDING * 2.0f)
 #define CALC_HEADER 48.0f
 #define CALC_DISPLAY_H 92.0f
+#define CALC_DISPLAY_FONT_SIZE 48.0f
 #define CALC_BUTTON_PADDING_W 2.0f
 #define CALC_BUTTON_PADDING_H 8.0f
 #define CALC_FUNCTION_BUTTON_H 32.0f
@@ -75,20 +76,28 @@ static Vector2 number_button_text_pos[4][5] = {0};
 
 static Font font;
 
-static const Color CALC_THEME_BASE = (Color){ 30, 30, 46, 255 };
-static const Color CALC_THEME_MANTLE = (Color){ 24, 24, 37, 255 };
-static const Color CALC_THEME_CRUST = (Color){ 17, 17, 27, 255 };
-static const Color CALC_THEME_TEXT = (Color){ 205, 214, 244, 255 };
-static const Color CALC_THEME_ACCENT = (Color){ 137, 180, 250, 255 };
+typedef struct {
+    char *input;
+    char *output;
+} Calc;
 
-static const Rectangle CALC_BG = (Rectangle){ .x      = WIN_PADDING,
-                                              .y      = WIN_PADDING,
-                                              .width  = WINW - WIN_PADDING * 2.0f,
-                                              .height = WINH - WIN_PADDING * 2.0f };
-static const Rectangle CALC_DISPLAY = (Rectangle){ .x      = PADDING,
-                                                   .y      = PADDING + CALC_HEADER,
-                                                   .width  = WINW - PADDING * 2.0f,
-                                                   .height = CALC_DISPLAY_H };
+static Calc calc;
+
+static const Color CALC_THEME_BASE    = (Color){  30,  30,  46, 255 };
+static const Color CALC_THEME_MANTLE  = (Color){  24,  24,  37, 255 };
+static const Color CALC_THEME_CRUST   = (Color){  17,  17,  27, 255 };
+static const Color CALC_THEME_TEXT    = (Color){ 205, 214, 244, 255 };
+static const Color CALC_THEME_ACCENT  = (Color){ 137, 180, 250, 255 };
+static const Color CALC_THEME_OVERLAY = (Color){ 108, 112, 134, 255 };
+
+static const Rectangle CALC_BG_RECT = (Rectangle){ .x      = WIN_PADDING,
+                                                   .y      = WIN_PADDING,
+                                                   .width  = WINW - WIN_PADDING * 2.0f,
+                                                   .height = WINH - WIN_PADDING * 2.0f };
+static const Rectangle CALC_DISPLAY_RECT = (Rectangle){ .x      = PADDING,
+                                                        .y      = PADDING + CALC_HEADER,
+                                                        .width  = WINW - PADDING * 2.0f,
+                                                        .height = CALC_DISPLAY_H };
 
 static inline void init();
 static inline void load_font();
@@ -97,9 +106,12 @@ static inline void init_number_button_text_pos();
 static inline void draw_background();
 static inline void draw_header();
 static inline void draw_display();
-static inline void draw_display_text_result(const char *text, float font_size);
+static inline void draw_display_text_input();
+static inline void draw_display_text_result();
 static inline void draw_function_buttons();
 static inline void draw_number_buttons();
+
+static inline void update_user_input();
 
 static inline void init() {
     load_font();
@@ -121,12 +133,17 @@ static inline void draw_app() {
     draw_background();
     draw_header();
     draw_display();
+    draw_display_text_result();
     draw_number_buttons();
+}
+
+static inline void update() {
+    update_user_input();
 }
 
 static inline void draw_background() {
     ClearBackground(CALC_THEME_BASE);
-    DrawRectangleRounded(CALC_BG, .05f, 0, CALC_THEME_MANTLE);
+    DrawRectangleRounded(CALC_BG_RECT, .05f, 0, CALC_THEME_MANTLE);
 }
 
 static inline void draw_header() {
@@ -136,10 +153,28 @@ static inline void draw_header() {
 }
 
 static inline void draw_display() {
-    DrawRectangleRounded(CALC_DISPLAY, 0.05f, 0, CALC_THEME_CRUST);
+    DrawRectangleRounded(CALC_DISPLAY_RECT, 0.05f, 0, CALC_THEME_CRUST);
 }
 
-static inline void draw_display_text_result(const char *text, float font_size) {}
+static inline void draw_display_text_input() {
+    if (!calc.input) return;
+    Vector2 text_size = MeasureTextEx(font, calc.input, CALC_DISPLAY_FONT_SIZE, .0f);
+    Vector2 draw_pos = {
+        .x = CALC_DISPLAY_RECT.x + WIN_PADDING,
+        .y = CALC_DISPLAY_RECT.y + CALC_DISPLAY_RECT.height - text_size.y,
+    };
+    DrawTextEx(font, calc.input, draw_pos, CALC_DISPLAY_FONT_SIZE, .0f, CALC_THEME_TEXT);
+}
+
+static inline void draw_display_text_result() {
+    if (!calc.output) calc.output = "0";
+    Vector2 text_size = MeasureTextEx(font, calc.output, CALC_DISPLAY_FONT_SIZE, .0f);
+    Vector2 draw_pos = {
+        .x = CALC_DISPLAY_RECT.x + CALC_DISPLAY_RECT.width - text_size.x - WIN_PADDING,
+        .y = CALC_DISPLAY_RECT.y + CALC_DISPLAY_RECT.height - text_size.y,
+    };
+    DrawTextEx(font, calc.output, draw_pos, CALC_DISPLAY_FONT_SIZE, .0f, CALC_THEME_TEXT);
+}
 
 static inline void draw_function_buttons() {}
 
@@ -172,27 +207,34 @@ static inline void init_number_button_rects() {
 static inline void draw_number_buttons() {
     for (size_t row = 4; row > 0; --row) {
         for (size_t col = 5; col > 0; --col) {
-            DrawRectangleRounded(
-                number_button_rects[row - 1][col - 1],
-                .05f,
-                0,
-                CALC_THEME_CRUST
-            );
+            Rectangle r = number_button_rects[row - 1][col - 1];
+            if (CheckCollisionPointRec(GetMousePosition(), r))
+                DrawRectangleRounded(r, .2f, 0, CALC_THEME_OVERLAY);
+            else
+                DrawRectangleRounded(
+                    number_button_rects[row - 1][col - 1],
+                    .2f,
+                    0,
+                    CALC_THEME_CRUST
+                );
             DrawTextEx(font, number_buttons[row - 1][col - 1].text, number_button_text_pos[row - 1][col - 1], CALC_NUMBER_BUTTON_FONT_SIZE, .0f, CALC_THEME_TEXT);
         }
     }
 }
+
+static inline void update_user_input() {}
 
 int main() {
     InitWindow(WINW, WINH, APP_NAME);
 
     if (!SearchAndSetResourceDir("assets"))
         TraceLog(LOG_WARNING, "Failed to set resource directory, fonts won't load correctly");
-    
+
     init();
     while (!WindowShouldClose()) {
         BeginDrawing();
         draw_app();
+        update();
         EndDrawing();
     }
 
