@@ -15,7 +15,7 @@ The app is still a WIP. ***No real features are implemented!!***
 
 Screen shot (Linux build)
 
-[![Screenshot]](./assets/sceenshots/app.png)
+![Screenshot](assets/sceenshots/app.png)
 
 ## Build from source
 
