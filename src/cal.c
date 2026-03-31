@@ -155,7 +155,18 @@ static inline void init() {
     if (!SearchAndSetResourceDir("assets"))
         TraceLog(LOG_WARNING, "Failed to set resource directory, fonts won't load correctly");
 
-    font = LoadFontEx(TextFormat("%s/%s", GetWorkingDirectory(), FONT_LOC), 144, 0, 0);
+    // TODO: about this mess
+    int c;
+    int *cpoints = LoadCodepoints(
+        "0123456789"
+        "+-/()'\",.<=>"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+        "abcdefghijklmnopqrstuvwxyz",
+        &c
+    );
+    font = LoadFontEx(TextFormat("%s/%s", GetWorkingDirectory(), FONT_LOC), 144, cpoints, c);
+    GenTextureMipmaps(&font.texture);
+    SetTextureFilter(font.texture, TEXTURE_FILTER_TRILINEAR);
     init_number_buttons();
     init_function_buttons();
 }
