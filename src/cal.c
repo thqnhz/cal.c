@@ -42,73 +42,73 @@ static Button func_btns[CALC_FUNCTION_ROWS][CALC_FUNCTION_COLS] = {
     {
         (Button){ "SHIFT", },
         (Button){ "ALPHA", },
-        (Button){ "LEFT", },
+        (Button){ "LEFT",  },
         (Button){ "RIGHT", },
-        (Button){ "MODE", },
-        (Button){ "2nd", },
+        (Button){ "MODE",  },
+        (Button){ "2nd",   },
     },
     {
-        (Button){ "OPTN", },
-        (Button){ "CALC", "SOLVE", "=", },
-        (Button){ "UP", },
-        (Button){ "DOWN", },
-        (Button){ "Sdx", "d/dx", ":" },
-        (Button){ "x", "Epsilon", "Sigma" },
+        (Button){ "OPTN",  },
+        (Button){ "CALC",    "SOLVE",   "=",      },
+        (Button){ "UP",    },
+        (Button){ "DOWN",  },
+        (Button){ "Sdx",     "d/dx",    ":"       },
+        (Button){ "x",       "Epsilon", "Sigma"   },
     },
     {
-        (Button){ "x/y", "xy/x", "/R"},
-        (Button){ "SQRT", "CBRT", "mod", },
-        (Button){ "x^2", "x^3", "neg(x)", },
-        (Button){ "x^y", "xRy", "Cot", },
-        (Button){ "Logx(y)", "10^y", "Cot^-1" },
-        (Button){ "Ln", "e^x", "t" },
+        (Button){ "x/y",     "xy/x",    "/R",     },
+        (Button){ "SQRT",    "CBRT",    "mod",    },
+        (Button){ "x^2",     "x^3",     "neg(x)", },
+        (Button){ "x^y",     "xRy",     "Cot",    },
+        (Button){ "Logx(y)", "10^y",    "Cot^-1", },
+        (Button){ "Ln",      "e^x",     "t",      },
     },
     {
-        (Button){ "(-)", "Log", "a"},
-        (Button){ "o\"", "FACT", "b", },
-        (Button){ "x^-1", "x!", "c", },
-        (Button){ "Sin", "Sin^-1", "d", },
-        (Button){ "Cos", "Cos^-1", "e" },
-        (Button){ "Tan", "Tan^-1", "f" },
+        (Button){ "(-)",     "Log",     "a",      },
+        (Button){ "o\"",     "FACT",    "b",      },
+        (Button){ "x^-1",    "x!",      "c",      },
+        (Button){ "Sin",     "Sin^-1",  "d",      },
+        (Button){ "Cos",     "Cos^-1",  "e",      },
+        (Button){ "Tan",     "Tan^-1",  "f",      },
     },
     {
-        (Button){ "STO", "RCL", "CLRv"},
-        (Button){ "ENG", "ANGL", "i", },
-        (Button){ "(", "Abs", "x", },
-        (Button){ ")", ",", "y", },
-        (Button){ "S<=>D", NULL, "z" },
-        (Button){ "M+", "M-", "m" },
+        (Button){ "STO",     "RCL",     "CLRv",   },
+        (Button){ "ENG",     "ANGL",    "i",      },
+        (Button){ "(",       "Abs",     "x",      },
+        (Button){ ")",       ",",       "y",      },
+        (Button){ "S<=>D",   NULL,      "z",      },
+        (Button){ "M+",      "M-",      "m",      },
     },
 };
 
 static Button num_btns[CALC_NUMBER_ROWS][CALC_NUMBER_COLS] = {
     {
-        (Button){ "0", "Rnd", },
-        (Button){ ".", "Ran#", "RanInt", },
-        (Button){ "x10", "PI", "e", },        // Exponent, Pi and Euler
-        (Button){ "Ans", "%", "PreAns", },
-        (Button){ "=", "~", },                // Equal and approximation
+        (Button){ "0",       "COPY",    "PASTE",  },
+        (Button){ ".",       "Ran#",    "RanInt", },
+        (Button){ "x10",     "PI",      "e",      },
+        (Button){ "Ans",     "%",       "PreAns", },
+        (Button){ "=",       "HISTORY", },
     },
     {
-        (Button){ "1", },
-        (Button){ "2", },
-        (Button){ "3", },
-        (Button){ "+", "Pol", "lnt" },
-        (Button){ "-", "Pol", "lntg" },
+        (Button){ "1",       "STAT",    },
+        (Button){ "2",       "CMPLX",   },
+        (Button){ "3",       "DISTR",   },
+        (Button){ "+",       "Pol",     "Ceil",    },
+        (Button){ "-",       "Rec",     "Floor",   },
     },
     {
-        (Button){ "4", },
-        (Button){ "5", },
-        (Button){ "6", },
-        (Button){ "x", "nPr", "GCD" },
-        (Button){ "/", "nCr", "LCM" },
+        (Button){ "4",       "MATRIX",  },
+        (Button){ "5",       "VECTOR",  },
+        (Button){ "6",       "FUNC",    "HELP",    },
+        (Button){ "x",       "nPr",     "GCD",     },
+        (Button){ "/",       "nCr",     "LCM",     },
     },
     {
-        (Button){ "7", "CONST", },
-        (Button){ "8", "CONV", },
-        (Button){ "9", },
-        (Button){ "DEL", "INS", "UNDO" },
-        (Button){ "AC", "OFF", },
+        (Button){ "7",       "CONST",   },
+        (Button){ "8",       "CONV",    },
+        (Button){ "9",       "LIMIT",   "Inf",     },
+        (Button){ "DEL",   },
+        (Button){ "AC",      "CLR ALL", },
     },
 };
 
@@ -156,6 +156,7 @@ static inline void draw_number_buttons();
 static inline void draw_function_buttons();
 
 static inline void update_user_input();
+static inline void add_input_string(Rectangle *r, const char *str);
 
 static inline void init() {
     InitWindow(WINW, WINH, APP_NAME);
@@ -176,7 +177,7 @@ static inline void init() {
     GenTextureMipmaps(&font.texture);
     SetTextureFilter(font.texture, TEXTURE_FILTER_TRILINEAR);
 
-    calc.input = (String){ .data = malloc(1024), .len = 0, .cap = 1 };
+    calc.input  = (String){ .data = malloc(1024), .len = 0, .cap = 1 };
     calc.output = (String){ .data = malloc(1024), .len = 0, .cap = 1 };
 
     init_number_buttons();
@@ -226,7 +227,7 @@ static inline void draw_display_text_result() {
     if (calc.output.len == 0) calc.output.data = "0";
     Vector2 text_size = MeasureTextEx(font, calc.output.data, CALC_DISPLAY_FONT_SIZE, .0f);
     Vector2 draw_pos = {
-        .x = CALC_DISPLAY_RECT.x + CALC_DISPLAY_RECT.width - text_size.x - WIN_PADDING,
+        .x = CALC_DISPLAY_RECT.x + CALC_DISPLAY_RECT.width  - text_size.x - WIN_PADDING,
         .y = CALC_DISPLAY_RECT.y + CALC_DISPLAY_RECT.height - text_size.y,
     };
     DrawTextEx(font, calc.output.data, draw_pos, CALC_DISPLAY_FONT_SIZE, .0f, CALC_THEME_TEXT);
@@ -268,7 +269,7 @@ static inline void init_number_buttons() {
 
             Vector2 text_size = MeasureTextEx(font, b->text, CALC_NUMBER_BUTTON_FONT_SIZE, .0f);
             b->text_pos = (Vector2){
-                .x = r.x + (r.width - text_size.x) / 2.0f,
+                .x = r.x + (r.width  - text_size.x) / 2.0f,
                 .y = r.y + (r.height - text_size.y) / 2.0f
             };
         }
@@ -311,18 +312,27 @@ static inline void update_user_input() {
 
             if (rn && CheckCollisionPointRec(GetMousePosition(), *rn)) {
                 if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
-                    if (calc.input.len + strlen(bn->text) >= calc.input.cap) {
-                        calc.input.cap *= 2;
-                        calc.input.data = realloc(calc.input.data, calc.input.cap);
-                    }
-                    memcpy(calc.input.data + calc.input.len, bn->text, strlen(bn->text));
-                    calc.input.len += strlen(bn->text);
-                    calc.input.data[calc.input.len] = '\0';
+                    add_input_string(rf, bn->text);
+                    break;
+                }
+            } else if (CheckCollisionPointRec(GetMousePosition(), *rf)) {
+                if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
+                    add_input_string(rf, bf->text);
                     break;
                 }
             }
         }
     }
+}
+
+static inline void add_input_string(Rectangle *r, const char *str) {
+    if (calc.input.len + strlen(str) >= calc.input.cap) {
+        calc.input.cap *= 2;
+        calc.input.data = realloc(calc.input.data, calc.input.cap);
+    }
+    memcpy(calc.input.data + calc.input.len, str, strlen(str));
+    calc.input.len += strlen(str);
+    calc.input.data[calc.input.len] = '\0';
 }
 
 int main() {
