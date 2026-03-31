@@ -2,6 +2,8 @@
 #include "../include/raylib.h"
 #include <stddef.h>
 #include <unistd.h>
+#include <string.h>
+#include <malloc.h>
 
 #define WINW 360
 #define WINH 720
@@ -113,8 +115,14 @@ static Button num_btns[CALC_NUMBER_ROWS][CALC_NUMBER_COLS] = {
 static Font font;
 
 typedef struct {
-    char *input;
-    char *output;
+    char *data;
+    size_t len;
+    size_t cap;
+} String;
+
+typedef struct {
+    String input;
+    String output;
 } Calc;
 
 static Calc calc;
@@ -167,6 +175,10 @@ static inline void init() {
     font = LoadFontEx(TextFormat("%s/%s", GetWorkingDirectory(), FONT_LOC), 144, cpoints, c);
     GenTextureMipmaps(&font.texture);
     SetTextureFilter(font.texture, TEXTURE_FILTER_TRILINEAR);
+
+    calc.input = (String){ .data = malloc(1024), .len = 0, .cap = 1 };
+    calc.output = (String){ .data = malloc(1024), .len = 0, .cap = 1 };
+
     init_number_buttons();
     init_function_buttons();
 }
@@ -175,6 +187,7 @@ static inline void draw_app() {
     draw_background();
     draw_header();
     draw_display();
+    draw_display_text_input();
     draw_display_text_result();
     draw_number_buttons();
     draw_function_buttons();
@@ -200,23 +213,23 @@ static inline void draw_display() {
 }
 
 static inline void draw_display_text_input() {
-    if (!calc.input) return;
-    Vector2 text_size = MeasureTextEx(font, calc.input, CALC_DISPLAY_FONT_SIZE, .0f);
+    if (calc.input.len == 0) return;
+    Vector2 text_size = MeasureTextEx(font, calc.input.data, CALC_DISPLAY_FONT_SIZE, .0f);
     Vector2 draw_pos = {
         .x = CALC_DISPLAY_RECT.x + WIN_PADDING,
-        .y = CALC_DISPLAY_RECT.y + CALC_DISPLAY_RECT.height - text_size.y,
+        .y = CALC_DISPLAY_RECT.y,
     };
-    DrawTextEx(font, calc.input, draw_pos, CALC_DISPLAY_FONT_SIZE, .0f, CALC_THEME_TEXT);
+    DrawTextEx(font, calc.input.data, draw_pos, CALC_DISPLAY_FONT_SIZE, .0f, CALC_THEME_TEXT);
 }
 
 static inline void draw_display_text_result() {
-    if (!calc.output) calc.output = "0";
-    Vector2 text_size = MeasureTextEx(font, calc.output, CALC_DISPLAY_FONT_SIZE, .0f);
+    if (calc.output.len == 0) calc.output.data = "0";
+    Vector2 text_size = MeasureTextEx(font, calc.output.data, CALC_DISPLAY_FONT_SIZE, .0f);
     Vector2 draw_pos = {
         .x = CALC_DISPLAY_RECT.x + CALC_DISPLAY_RECT.width - text_size.x - WIN_PADDING,
         .y = CALC_DISPLAY_RECT.y + CALC_DISPLAY_RECT.height - text_size.y,
     };
-    DrawTextEx(font, calc.output, draw_pos, CALC_DISPLAY_FONT_SIZE, .0f, CALC_THEME_TEXT);
+    DrawTextEx(font, calc.output.data, draw_pos, CALC_DISPLAY_FONT_SIZE, .0f, CALC_THEME_TEXT);
 }
 
 static inline void init_function_buttons() {
@@ -288,7 +301,29 @@ static inline void draw_number_buttons() {
     }
 }
 
-static inline void update_user_input() {}
+static inline void update_user_input() {
+    for (size_t row = 0; row < CALC_FUNCTION_ROWS; ++row) {
+        for (size_t col = 0; col < CALC_FUNCTION_COLS; ++col) {
+            Button *bf = &func_btns[row][col];
+            Button *bn = (row < CALC_NUMBER_ROWS && col < CALC_NUMBER_COLS) ? &num_btns[row][col] : NULL;
+            Rectangle *rf = &bf->rect;
+            Rectangle *rn = (bn) ? &bn->rect : NULL;
+
+            if (rn && CheckCollisionPointRec(GetMousePosition(), *rn)) {
+                if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
+                    if (calc.input.len + strlen(bn->text) >= calc.input.cap) {
+                        calc.input.cap *= 2;
+                        calc.input.data = realloc(calc.input.data, calc.input.cap);
+                    }
+                    memcpy(calc.input.data + calc.input.len, bn->text, strlen(bn->text));
+                    calc.input.len += strlen(bn->text);
+                    calc.input.data[calc.input.len] = '\0';
+                    break;
+                }
+            }
+        }
+    }
+}
 
 int main() {
     init();
