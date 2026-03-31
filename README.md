@@ -35,7 +35,13 @@ $ cd cal.c
 $ gcc -o nob nob.c
 ```
 
-3. Run the app
+3. Build the app
+
+```bash
+$ ./nob
+```
+
+4. Run the app
 
 ```bash
 $ ./build/Calc
@@ -44,7 +50,9 @@ $ ./build/Calc
 ## Third-party libraries
 
 Build system: [Nob](https://github.com/tsoding/nob.h)
+
 Rendering: [Raylib](https://github.com/raysan5/raylib)
+
 Font: [Rubik](https://fonts.google.com/specimen/Rubik)
 
 All licenses belong to their respective owners
