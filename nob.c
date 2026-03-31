@@ -30,7 +30,7 @@ int main(int argc, char **argv) {
     nob_cmd_append(&cmd, "-L"RAYLIB_SRC, "-lraylib", "-lm", "-lpthread", "-lGL", "-lrt", "-lX11");
 #elif defined(_WIN32)
     nob_cmd_append(&cmd, "-L"RAYLIB_SRC, "-lraylib", "-lopengl32", "-lgdi32", "-lwinmm");
-elif defined(__APPLE__)
+#elif defined(__APPLE__)
     nob_cmd_append(&cmd, "-L"RAYLIB_SRC, "-lraylib",
         "-framework", "OpenGL",
         "-framework", "Cocoa",
