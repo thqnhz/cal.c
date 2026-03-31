@@ -24,7 +24,7 @@ int main(int argc, char **argv) {
     if (!mkdir_if_not_exists(BUILD_DIR)) return 1;
 
     Nob_Cmd cmd = {0};
-    nob_cmd_append(&cmd, "gcc", SRC_DIR"cal.c", "-o", BUILD_DIR APP_NAME);
+    nob_cmd_append(&cmd, "gcc", "-ggdb", "-O0" , SRC_DIR"cal.c", "-o", BUILD_DIR APP_NAME);
 
 #if defined(__linux__)
     nob_cmd_append(&cmd, "-L"RAYLIB_SRC, "-lraylib", "-lm", "-lpthread", "-lGL", "-lrt", "-lX11");
