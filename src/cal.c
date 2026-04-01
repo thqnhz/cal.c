@@ -9,13 +9,13 @@
 #define WINH 720
 #define APP_NAME "Calc"
 #define APP_NAME_FULL "Calculator"
-#define FONT_LOC "Rubik/Rubik-Regular.ttf"
+#define FONT_LOC "DejaVu/DejaVuSans.ttf"
 #define WIN_PADDING 8.0f
 #define PADDING (WIN_PADDING * 2.0f)
 #define CALC_HEADER 48.0f
 #define CALC_DISPLAY_H 120.0f
 #define CALC_DISPLAY_FONT_SIZE 48.0f
-#define CALC_BUTTON_PADDING_W 1.0f
+#define CALC_BUTTON_PADDING_W .5f
 #define CALC_BUTTON_PADDING_H 8.0f
 #define CALC_NUMBER_ROWS 4
 #define CALC_NUMBER_COLS 5
@@ -23,11 +23,11 @@
 #define CALC_FUNCTION_COLS 6
 #define CALC_FUNCTION_BUTTON_H 44.0f
 #define CALC_FUNCTION_BUTTON_W ((WINW - (PADDING + CALC_BUTTON_PADDING_W) * 2.0f) / 6.0f)
-#define CALC_FUNCTION_BUTTON_FONT_SIZE 20.0f
+#define CALC_FUNCTION_BUTTON_FONT_SIZE 18.0f
 #define CALC_NUMBER_BUTTON_H 54.0f
 #define CALC_NUMBER_BUTTON_W ((WINW - (PADDING + CALC_BUTTON_PADDING_W) * 2.0f) / 5.0f)
 #define CALC_NUMBER_BUTTON_FONT_SIZE 28.0f
-#define CALC_BUTTON_SHIFT_ALPHA_FONT_SIZE 12.0f
+#define CALC_BUTTON_SHIFT_ALPHA_FONT_SIZE 14.0f
 
 typedef struct Button {
     const char *text;
@@ -43,41 +43,41 @@ static Button func_btns[CALC_FUNCTION_ROWS][CALC_FUNCTION_COLS] = {
     {
         (Button){ "SHIFT", },
         (Button){ "ALPHA", },
-        (Button){ "LEFT",  },
-        (Button){ "RIGHT", },
+        (Button){ "◀",  },
+        (Button){ "▶", },
         (Button){ "MODE",  },
         (Button){ "2nd",   },
     },
     {
         (Button){ "OPTN",  },
         (Button){ "CALC",    "SOLVE",   "=",      },
-        (Button){ "UP",    },
-        (Button){ "DOWN",  },
-        (Button){ "Sdx",     "d/dx",    ":"       },
-        (Button){ "x",       "Epsilon", "Sigma"   },
+        (Button){ "▲",    },
+        (Button){ "▼",  },
+        (Button){ "∫dx",     "d/dx",    ":"       },
+        (Button){ "x",       "Σ", "∏"   },
     },
     {
-        (Button){ "x/y",     "xy/x",    "/R",     },
-        (Button){ "SQRT",    "CBRT",    "mod",    },
-        (Button){ "x^2",     "x^3",     "neg(x)", },
-        (Button){ "x^y",     "xRy",     "Cot",    },
-        (Button){ "Logx(y)", "10^y",    "Cot^-1", },
-        (Button){ "Ln",      "e^x",     "t",      },
+        (Button){ "x/y",     "xy/z",    "÷R",     },
+        (Button){ "√x",    "∛x",    "mod",    },
+        (Button){ "x²",      "x³",      "neg(x)", },
+        (Button){ "xʸ",     "xRy",     "Cot",    },
+        (Button){ "Logₓ(y)", "10ʸ",    "Cot⁻¹", },
+        (Button){ "Ln",      "eˣ",     "t",      },
     },
     {
         (Button){ "(-)",     "Log",     "a",      },
-        (Button){ "o\"",     "FACT",    "b",      },
-        (Button){ "x^-1",    "x!",      "c",      },
-        (Button){ "Sin",     "Sin^-1",  "d",      },
-        (Button){ "Cos",     "Cos^-1",  "e",      },
-        (Button){ "Tan",     "Tan^-1",  "f",      },
+        (Button){ "°'\"",     "FACT",    "b",      },
+        (Button){ "x⁻¹",    "x!",      "c",      },
+        (Button){ "Sin",     "Sin⁻¹",  "d",      },
+        (Button){ "Cos",     "Cos⁻¹",  "e",      },
+        (Button){ "Tan",     "Tan⁻¹",  "f",      },
     },
     {
         (Button){ "STO",     "RCL",     "CLRv",   },
-        (Button){ "ENG",     "ANGL",    "i",      },
-        (Button){ "(",       "Abs",     "x",      },
+        (Button){ "ENG",     "∠",    "i",      },
+        (Button){ "(",       "|x|",     "x",      },
         (Button){ ")",       ",",       "y",      },
-        (Button){ "S<=>D",   NULL,      "z",      },
+        (Button){ "S⇔D",   NULL,      "z",      },
         (Button){ "M+",      "M-",      "m",      },
     },
 };
@@ -86,7 +86,7 @@ static Button num_btns[CALC_NUMBER_ROWS][CALC_NUMBER_COLS] = {
     {
         (Button){ "0",       "COPY",    "PASTE",  },
         (Button){ ".",       "Ran#",    "RanInt", },
-        (Button){ "x10",     "PI",      "e",      },
+        (Button){ "×10",     "π",      "e",      },
         (Button){ "Ans",     "%",       "PreAns", },
         (Button){ "=",       "HISTORY", },
     },
@@ -101,13 +101,13 @@ static Button num_btns[CALC_NUMBER_ROWS][CALC_NUMBER_COLS] = {
         (Button){ "4",       "MATRIX",  },
         (Button){ "5",       "VECTOR",  },
         (Button){ "6",       "FUNC",    "HELP",    },
-        (Button){ "x",       "nPr",     "GCD",     },
-        (Button){ "/",       "nCr",     "LCM",     },
+        (Button){ "×",       "nPr",     "GCD",     },
+        (Button){ "÷",       "nCr",     "LCM",     },
     },
     {
         (Button){ "7",       "CONST",   },
         (Button){ "8",       "CONV",    },
-        (Button){ "9",       "LIMIT",   "Inf",     },
+        (Button){ "9",       "LIMIT",   "∞",     },
         (Button){ "DEL",   },
         (Button){ "AC",      "CLR ALL", },
     },
@@ -148,6 +148,7 @@ static inline void init();
 static inline void load_font();
 static inline void init_number_buttons();
 static inline void init_function_buttons();
+static inline void calc_text_size(Rectangle *r, Button *b, float size);
 static inline void draw_background();
 static inline void draw_header();
 static inline void draw_display();
@@ -169,9 +170,10 @@ static inline void init() {
     int c;
     int *cpoints = LoadCodepoints(
         "0123456789"
-        "+-/()'\",.<=>^"
+        "+-/()'\",.=^|:%!"
         "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-        "abcdefghijklmnopqrstuvwxyz",
+        "abcdefghijklmnopqrstuvwxyz"
+        u8"π⁻⁰¹²³⁴⁵⁶⁷⁸⁹∠°Σ∏▼▲◀▶√∛×÷∫⇔ₓˣʸ∞",
         &c
     );
     font = LoadFontEx(TextFormat("%s/%s", GetWorkingDirectory(), FONT_LOC), 144, cpoints, c);
@@ -245,24 +247,7 @@ static inline void init_function_buttons() {
                 .height = CALC_FUNCTION_BUTTON_H - CALC_BUTTON_PADDING_H
             };
             b->rect = r;
-
-            Vector2 text_size = MeasureTextEx(font, b->text, CALC_FUNCTION_BUTTON_FONT_SIZE, .0f);
-            b->text_pos = (Vector2){
-                .x = r.x + (r.width - text_size.x) / 2.0f,
-                .y = r.y + (r.height - text_size.y) / 2.0f
-            };
-
-            Vector2 alpha_text_size = MeasureTextEx(font, b->alpha_text, CALC_BUTTON_SHIFT_ALPHA_FONT_SIZE, .0f);
-            b->alpha_text_pos = (Vector2){
-                .x = r.x + r.width - alpha_text_size.x,
-                .y = r.y - alpha_text_size.y
-            };
-
-            Vector2 shift_text_size = MeasureTextEx(font, b->shift_text, CALC_BUTTON_SHIFT_ALPHA_FONT_SIZE, .0f);
-            b->shift_text_pos = (Vector2){
-                .x = r.x,
-                .y = r.y - shift_text_size.y
-            };
+            calc_text_size(&r, b, CALC_FUNCTION_BUTTON_FONT_SIZE);
         }
     }
 }
@@ -278,25 +263,28 @@ static inline void init_number_buttons() {
                 .height = CALC_NUMBER_BUTTON_H - CALC_BUTTON_PADDING_H
             };
             b->rect = r;
-
-            Vector2 text_size = MeasureTextEx(font, b->text, CALC_NUMBER_BUTTON_FONT_SIZE, .0f);
-            b->text_pos = (Vector2){
-                .x = r.x + (r.width  - text_size.x) / 2.0f,
-                .y = r.y + (r.height - text_size.y) / 2.0f
-            };
-            Vector2 alpha_text_size = MeasureTextEx(font, b->alpha_text, CALC_BUTTON_SHIFT_ALPHA_FONT_SIZE, .0f);
-            b->alpha_text_pos = (Vector2){
-                .x = r.x + r.width - alpha_text_size.x,
-                .y = r.y - alpha_text_size.y
-            };
-
-            Vector2 shift_text_size = MeasureTextEx(font, b->shift_text, CALC_BUTTON_SHIFT_ALPHA_FONT_SIZE, .0f);
-            b->shift_text_pos = (Vector2){
-                .x = r.x,
-                .y = r.y - shift_text_size.y
-            };
+            calc_text_size(&r, b, CALC_NUMBER_BUTTON_FONT_SIZE);
         }
     }
+}
+
+static inline void calc_text_size(Rectangle *r, Button *b, float size) {
+    Vector2 text_size = MeasureTextEx(font, b->text, size, .0f);
+    b->text_pos = (Vector2){
+        .x = r->x + (r->width  - text_size.x) / 2.0f,
+        .y = r->y + (r->height - text_size.y) / 2.0f
+    };
+    Vector2 alpha_text_size = MeasureTextEx(font, b->alpha_text, CALC_BUTTON_SHIFT_ALPHA_FONT_SIZE, .0f);
+    b->alpha_text_pos = (Vector2){
+        .x = r->x + r->width - alpha_text_size.x,
+        .y = r->y - alpha_text_size.y
+    };
+
+    Vector2 shift_text_size = MeasureTextEx(font, b->shift_text, CALC_BUTTON_SHIFT_ALPHA_FONT_SIZE, .0f);
+    b->shift_text_pos = (Vector2){
+        .x = r->x,
+        .y = r->y - shift_text_size.y
+    };
 }
 
 static inline void draw_function_buttons() {
@@ -307,9 +295,9 @@ static inline void draw_function_buttons() {
             Color c = CALC_THEME_CRUST;
             if (CheckCollisionPointRec(GetMousePosition(), *r)) c = CALC_THEME_OVERLAY;
             DrawRectangleRounded(*r, .2f, 0, c);
-            Color text_c = strcmp(b->text, "SHIFT") == 0
+            Color text_c = TextIsEqual(b->text, "SHIFT")
                 ? YELLOW
-                : strcmp(b->text, "ALPHA") == 0
+                : TextIsEqual(b->text, "ALPHA")
                 ? RED
                 : CALC_THEME_TEXT;
             DrawTextEx(font, b->text, b->text_pos, CALC_FUNCTION_BUTTON_FONT_SIZE, .0f, text_c);
