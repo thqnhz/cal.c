@@ -7,13 +7,13 @@
 #define WINH 720
 #define APP_NAME "Calc"
 #define APP_NAME_FULL "Calculator"
-#define FONT_LOC "DejaVu/DejaVuSans.ttf"
+#define FONT_LOC "DejaVu/DejaVuSansMono.ttf"
 #define WIN_PADDING 8.0f
 #define PADDING (WIN_PADDING * 2.0f)
 #define CALC_HEADER 48.0f
 #define CALC_DISPLAY_H 120.0f
 #define CALC_DISPLAY_FONT_SIZE 48.0f
-#define CALC_DISPLAY_FONT_SIZE_MIN 24.0f
+#define CALC_DISPLAY_FONT_SIZE_MIN 32.0f
 #define CALC_BUTTON_PADDING_W .5f
 #define CALC_BUTTON_PADDING_H 8.0f
 #define CALC_NUMBER_ROWS 4
@@ -36,8 +36,11 @@ typedef struct Button {
     const char *alpha_text;
     Rectangle rect;
     Vector2 text_pos;
+    float text_size;
     Vector2 shift_text_pos;
+    float shift_text_size;
     Vector2 alpha_text_pos;
+    float alpha_text_size;
 } Button;
 
 static Button func_btns[CALC_FUNCTION_ROWS][CALC_FUNCTION_COLS] = {
@@ -55,14 +58,14 @@ static Button func_btns[CALC_FUNCTION_ROWS][CALC_FUNCTION_COLS] = {
         (Button){ "▲",    },
         (Button){ "▼",  },
         (Button){ "∫dx",     "d/dx",    ":"       },
-        (Button){ "x",       "Σ", "∏"   },
+        (Button){ "x",       "Σ",       "∏"       },
     },
     {
         (Button){ "x/y",     "xy/z",    "÷R",     },
         (Button){ "√x",      "∛x",      "mod",    },
         (Button){ "x²",      "x³",      "neg(x)", },
         (Button){ "xʸ",      "xRy",     "Cot",    },
-        (Button){ "Logₓ(y)", "10ʸ",     "Cot⁻¹", },
+        (Button){ "Logₓ(y)", "10ʸ",     "Cot⁻¹",  },
         (Button){ "Ln",      "eˣ",      "t",      },
     },
     {
@@ -95,15 +98,15 @@ static Button num_btns[CALC_NUMBER_ROWS][CALC_NUMBER_COLS] = {
         (Button){ "1",       "STAT",    },
         (Button){ "2",       "CMPLX",   },
         (Button){ "3",       "DISTR",   },
-        (Button){ "+",       "Pol",     "Ceil",    },
-        (Button){ "-",       "Rec",     "Floor",   },
+        (Button){ "+",       "Pol",     "Ceil",   },
+        (Button){ "-",       "Rec",     "Floor",  },
     },
     {
         (Button){ "4",       "MATRIX",  },
         (Button){ "5",       "VECTOR",  },
-        (Button){ "6",       "FUNC",    "HELP",    },
-        (Button){ "×",       "nPr",     "GCD",     },
-        (Button){ "÷",       "nCr",     "LCM",     },
+        (Button){ "6",       "FUNC",    "HELP",   },
+        (Button){ "×",       "nPr",     "GCD",    },
+        (Button){ "÷",       "nCr",     "LCM",    },
     },
     {
         (Button){ "7",       "CONST",   },
@@ -118,7 +121,7 @@ static Font font;
 
 typedef struct {
     char input[CALC_MAX_INPUT_LEN];
-    char *output;
+    char output[CALC_MAX_OUTPUT_LEN];
 } Calc;
 
 static Calc calc;
@@ -144,6 +147,7 @@ static inline void load_font();
 static inline void init_number_buttons();
 static inline void init_function_buttons();
 static inline void calc_text_size(Rectangle *r, Button *b, float size);
+static inline float fix_text_size(const char* text, float max_width, float current);
 static inline void draw_background();
 static inline void draw_header();
 static inline void draw_display();
@@ -210,16 +214,23 @@ static inline void draw_display() {
 
 static inline void draw_display_text_input() {
     if (TextLength(calc.input) == 0) return;
-    Vector2 text_size = MeasureTextEx(font, calc.input, CALC_DISPLAY_FONT_SIZE, .0f);
+    float size = CALC_DISPLAY_FONT_SIZE;
+    while (
+            MeasureTextEx(font, calc.input, size, .0f).x > CALC_DISPLAY_RECT.width - WIN_PADDING * 2.0f
+            && size >= CALC_DISPLAY_FONT_SIZE_MIN
+    ) {
+        size -= 0.5f;
+    }
+    Vector2 text_size = MeasureTextEx(font, calc.input, size, .0f);
     Vector2 draw_pos = {
         .x = CALC_DISPLAY_RECT.x + WIN_PADDING,
         .y = CALC_DISPLAY_RECT.y,
     };
-    DrawTextEx(font, calc.input, draw_pos, CALC_DISPLAY_FONT_SIZE, .0f, CALC_THEME_TEXT);
+    DrawTextEx(font, calc.input, draw_pos, size, .0f, CALC_THEME_TEXT);
 }
 
 static inline void draw_display_text_result() {
-    if (TextLength(calc.output) == 0) calc.output = "0";
+    if (TextLength(calc.output) == 0) calc.output[0] = '0';
     Vector2 text_size = MeasureTextEx(font, calc.output, CALC_DISPLAY_FONT_SIZE, .0f);
     Vector2 draw_pos = {
         .x = CALC_DISPLAY_RECT.x + CALC_DISPLAY_RECT.width  - text_size.x - WIN_PADDING,
@@ -261,7 +272,8 @@ static inline void init_number_buttons() {
 }
 
 static inline void calc_text_size(Rectangle *r, Button *b, float size) {
-    Vector2 text_size = MeasureTextEx(font, b->text, size, .0f);
+    b->text_size = fix_text_size(b->text, r->width * 0.8f, size);
+    Vector2 text_size = MeasureTextEx(font, b->text, b->text_size, .0f);
     b->text_pos = (Vector2){
         .x = r->x + (r->width  - text_size.x) / 2.0f,
         .y = r->y + (r->height - text_size.y) / 2.0f
@@ -279,6 +291,12 @@ static inline void calc_text_size(Rectangle *r, Button *b, float size) {
     };
 }
 
+static inline float fix_text_size(const char* text, float max_width, float current) {
+    while (MeasureTextEx(font, text, current, .0f).x > max_width)
+        current -= 0.5f;
+    return current;
+}
+
 static inline void draw_function_buttons() {
     for (size_t row = 0; row < CALC_FUNCTION_ROWS; ++row) {
         for (size_t col = 0; col < CALC_FUNCTION_COLS; ++col) {
@@ -290,7 +308,7 @@ static inline void draw_function_buttons() {
             Color text_c = TextIsEqual(b->text, "SHIFT") ? YELLOW
                 : TextIsEqual(b->text, "ALPHA")          ? RED
                 : CALC_THEME_TEXT;
-            DrawTextEx(font, b->text, b->text_pos, CALC_FUNCTION_BUTTON_FONT_SIZE, .0f, text_c);
+            DrawTextEx(font, b->text, b->text_pos, b->text_size, .0f, text_c);
             if (b->alpha_text) DrawTextEx(font, b->alpha_text, b->alpha_text_pos, CALC_BUTTON_SHIFT_ALPHA_FONT_SIZE, .0f, RED);
             if (b->shift_text) DrawTextEx(font, b->shift_text, b->shift_text_pos, CALC_BUTTON_SHIFT_ALPHA_FONT_SIZE, .0f, YELLOW);
         }
