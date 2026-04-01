@@ -53,7 +53,7 @@ Build system: [Nob](https://github.com/tsoding/nob.h)
 
 Rendering: [Raylib](https://github.com/raysan5/raylib)
 
-Font: [Rubik](https://fonts.google.com/specimen/Rubik)
+Font: [DejaVu](https://github.com/dejavu-fonts/dejavu-fonts)
 
 All licenses belong to their respective owners
 
