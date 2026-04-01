@@ -2,8 +2,6 @@
 #include "../include/raylib.h"
 #include <stddef.h>
 #include <unistd.h>
-#include <string.h>
-#include <malloc.h>
 
 #define WINW 360
 #define WINH 720
@@ -15,6 +13,7 @@
 #define CALC_HEADER 48.0f
 #define CALC_DISPLAY_H 120.0f
 #define CALC_DISPLAY_FONT_SIZE 48.0f
+#define CALC_DISPLAY_FONT_SIZE_MIN 24.0f
 #define CALC_BUTTON_PADDING_W .5f
 #define CALC_BUTTON_PADDING_H 8.0f
 #define CALC_NUMBER_ROWS 4
@@ -28,6 +27,8 @@
 #define CALC_NUMBER_BUTTON_W ((WINW - (PADDING + CALC_BUTTON_PADDING_W) * 2.0f) / 5.0f)
 #define CALC_NUMBER_BUTTON_FONT_SIZE 28.0f
 #define CALC_BUTTON_SHIFT_ALPHA_FONT_SIZE 14.0f
+#define CALC_MAX_INPUT_LEN 128
+#define CALC_MAX_OUTPUT_LEN 32
 
 typedef struct Button {
     const char *text;
@@ -58,26 +59,26 @@ static Button func_btns[CALC_FUNCTION_ROWS][CALC_FUNCTION_COLS] = {
     },
     {
         (Button){ "x/y",     "xy/z",    "÷R",     },
-        (Button){ "√x",    "∛x",    "mod",    },
+        (Button){ "√x",      "∛x",      "mod",    },
         (Button){ "x²",      "x³",      "neg(x)", },
-        (Button){ "xʸ",     "xRy",     "Cot",    },
-        (Button){ "Logₓ(y)", "10ʸ",    "Cot⁻¹", },
-        (Button){ "Ln",      "eˣ",     "t",      },
+        (Button){ "xʸ",      "xRy",     "Cot",    },
+        (Button){ "Logₓ(y)", "10ʸ",     "Cot⁻¹", },
+        (Button){ "Ln",      "eˣ",      "t",      },
     },
     {
         (Button){ "(-)",     "Log",     "a",      },
-        (Button){ "°'\"",     "FACT",    "b",      },
-        (Button){ "x⁻¹",    "x!",      "c",      },
-        (Button){ "Sin",     "Sin⁻¹",  "d",      },
-        (Button){ "Cos",     "Cos⁻¹",  "e",      },
-        (Button){ "Tan",     "Tan⁻¹",  "f",      },
+        (Button){ "°'\"",    "FACT",    "b",      },
+        (Button){ "x⁻¹",     "x!",      "c",      },
+        (Button){ "Sin",     "Sin⁻¹",   "d",      },
+        (Button){ "Cos",     "Cos⁻¹",   "e",      },
+        (Button){ "Tan",     "Tan⁻¹",   "f",      },
     },
     {
         (Button){ "STO",     "RCL",     "CLRv",   },
-        (Button){ "ENG",     "∠",    "i",      },
+        (Button){ "ENG",     "∠",       "i",      },
         (Button){ "(",       "|x|",     "x",      },
         (Button){ ")",       ",",       "y",      },
-        (Button){ "S⇔D",   NULL,      "z",      },
+        (Button){ "S⇔D",     NULL,      "z",      },
         (Button){ "M+",      "M-",      "m",      },
     },
 };
@@ -86,7 +87,7 @@ static Button num_btns[CALC_NUMBER_ROWS][CALC_NUMBER_COLS] = {
     {
         (Button){ "0",       "COPY",    "PASTE",  },
         (Button){ ".",       "Ran#",    "RanInt", },
-        (Button){ "×10",     "π",      "e",      },
+        (Button){ "×10",     "π",       "e",      },
         (Button){ "Ans",     "%",       "PreAns", },
         (Button){ "=",       "HISTORY", },
     },
@@ -116,14 +117,8 @@ static Button num_btns[CALC_NUMBER_ROWS][CALC_NUMBER_COLS] = {
 static Font font;
 
 typedef struct {
-    char *data;
-    size_t len;
-    size_t cap;
-} String;
-
-typedef struct {
-    String input;
-    String output;
+    char input[CALC_MAX_INPUT_LEN];
+    char *output;
 } Calc;
 
 static Calc calc;
@@ -180,9 +175,6 @@ static inline void init() {
     GenTextureMipmaps(&font.texture);
     SetTextureFilter(font.texture, TEXTURE_FILTER_TRILINEAR);
 
-    calc.input  = (String){ .data = malloc(1024), .len = 0, .cap = 1 };
-    calc.output = (String){ .data = malloc(1024), .len = 0, .cap = 1 };
-
     init_number_buttons();
     init_function_buttons();
 }
@@ -217,23 +209,23 @@ static inline void draw_display() {
 }
 
 static inline void draw_display_text_input() {
-    if (calc.input.len == 0) return;
-    Vector2 text_size = MeasureTextEx(font, calc.input.data, CALC_DISPLAY_FONT_SIZE, .0f);
+    if (TextLength(calc.input) == 0) return;
+    Vector2 text_size = MeasureTextEx(font, calc.input, CALC_DISPLAY_FONT_SIZE, .0f);
     Vector2 draw_pos = {
         .x = CALC_DISPLAY_RECT.x + WIN_PADDING,
         .y = CALC_DISPLAY_RECT.y,
     };
-    DrawTextEx(font, calc.input.data, draw_pos, CALC_DISPLAY_FONT_SIZE, .0f, CALC_THEME_TEXT);
+    DrawTextEx(font, calc.input, draw_pos, CALC_DISPLAY_FONT_SIZE, .0f, CALC_THEME_TEXT);
 }
 
 static inline void draw_display_text_result() {
-    if (calc.output.len == 0) calc.output.data = "0";
-    Vector2 text_size = MeasureTextEx(font, calc.output.data, CALC_DISPLAY_FONT_SIZE, .0f);
+    if (TextLength(calc.output) == 0) calc.output = "0";
+    Vector2 text_size = MeasureTextEx(font, calc.output, CALC_DISPLAY_FONT_SIZE, .0f);
     Vector2 draw_pos = {
         .x = CALC_DISPLAY_RECT.x + CALC_DISPLAY_RECT.width  - text_size.x - WIN_PADDING,
         .y = CALC_DISPLAY_RECT.y + CALC_DISPLAY_RECT.height - text_size.y,
     };
-    DrawTextEx(font, calc.output.data, draw_pos, CALC_DISPLAY_FONT_SIZE, .0f, CALC_THEME_TEXT);
+    DrawTextEx(font, calc.output, draw_pos, CALC_DISPLAY_FONT_SIZE, .0f, CALC_THEME_TEXT);
 }
 
 static inline void init_function_buttons() {
@@ -295,10 +287,8 @@ static inline void draw_function_buttons() {
             Color c = CALC_THEME_CRUST;
             if (CheckCollisionPointRec(GetMousePosition(), *r)) c = CALC_THEME_OVERLAY;
             DrawRectangleRounded(*r, .2f, 0, c);
-            Color text_c = TextIsEqual(b->text, "SHIFT")
-                ? YELLOW
-                : TextIsEqual(b->text, "ALPHA")
-                ? RED
+            Color text_c = TextIsEqual(b->text, "SHIFT") ? YELLOW
+                : TextIsEqual(b->text, "ALPHA")          ? RED
                 : CALC_THEME_TEXT;
             DrawTextEx(font, b->text, b->text_pos, CALC_FUNCTION_BUTTON_FONT_SIZE, .0f, text_c);
             if (b->alpha_text) DrawTextEx(font, b->alpha_text, b->alpha_text_pos, CALC_BUTTON_SHIFT_ALPHA_FONT_SIZE, .0f, RED);
@@ -332,27 +322,21 @@ static inline void update_user_input() {
 
             if (rn && CheckCollisionPointRec(GetMousePosition(), *rn)) {
                 if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
-                    add_input_string(rf, bn->text);
+                    if (TextLength(calc.input) + TextLength(bn->text) <= CALC_MAX_INPUT_LEN) {
+                        TextCopy(calc.input, TextFormat("%s%s", calc.input, bn->text));
+                    }
                     break;
                 }
             } else if (CheckCollisionPointRec(GetMousePosition(), *rf)) {
                 if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
-                    add_input_string(rf, bf->text);
+                    if (TextLength(calc.input) + TextLength(bf->text) <= CALC_MAX_INPUT_LEN) {
+                        TextCopy(calc.input, TextFormat("%s%s", calc.input, bf->text));
+                    }
                     break;
                 }
             }
         }
     }
-}
-
-static inline void add_input_string(Rectangle *r, const char *str) {
-    if (calc.input.len + strlen(str) >= calc.input.cap) {
-        calc.input.cap *= 2;
-        calc.input.data = realloc(calc.input.data, calc.input.cap);
-    }
-    memcpy(calc.input.data + calc.input.len, str, strlen(str));
-    calc.input.len += strlen(str);
-    calc.input.data[calc.input.len] = '\0';
 }
 
 int main() {
